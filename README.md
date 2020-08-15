@@ -1,5 +1,9 @@
 # youtube_downloader_converter
 
+## Download
+1) Über die Github Repo <br/>
+2) Alternativ: https://www.dropbox.com/sh/37r4wqgvtkqq697/AADF_I54LFKC7H94SBxH4XLza?dl=0
+
 ## Voraussetzungen:
 1)	Ein aktueller Browser (Firefox oder Chrome) muss installiert sein <br/>
 a.	Firefox Download: https://www.mozilla.org/de/firefox/new/ <br/>
