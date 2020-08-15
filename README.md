@@ -8,7 +8,7 @@ b.	Chrome Download: https://www.google.com/intl/de_de/chrome/
 Schritt 1):
 Öffnen Sie im Ordner „YOU_TUBE_DOWNLOADER“ die Datei „YOU_TUBE_DOWNLOADER“
 Es öffnet sich ein Fenster
-![Alt text](/img/1.png?raw=true "Optional Title")
+!(/img/1.png?raw=true)
  
 Schritt 2):
 Fügen Sie einen Link zu einem You-Tube-Video, einer Playlist oder zur Video-Sektion eines You-Tube-Channels in das Eingabefenster für die URL ein
