@@ -1,12 +1,12 @@
 # youtube_downloader_converter
 
 ## Voraussetzungen:
-1)	Ein aktueller Browser (Firefox oder Chrome) muss installiert sein
-a.	Firefox Download: https://www.mozilla.org/de/firefox/new/ 
-b.	Chrome Download: https://www.google.com/intl/de_de/chrome/
+1)	Ein aktueller Browser (Firefox oder Chrome) muss installiert sein <br/>
+a.	Firefox Download: https://www.mozilla.org/de/firefox/new/ <br/>
+b.	Chrome Download: https://www.google.com/intl/de_de/chrome/ <br/>
 2)	Die Datei “YOU_TUBE_DOWNLOADER“ ist an einem beliebigen Ort (z.B. Desktop) entpackt
 ## Schritt 1):
-Öffnen Sie im Ordner „YOU_TUBE_DOWNLOADER“ die Datei „YOU_TUBE_DOWNLOADER“
+Öffnen Sie im Ordner „YOU_TUBE_DOWNLOADER“ die Datei „YOU_TUBE_DOWNLOADER“ <br/>
 Es öffnet sich ein Fenster
 ![Alt text](/img/1.png?raw=true)
  
@@ -15,7 +15,7 @@ Fügen Sie einen Link zu einem You-Tube-Video, einer Playlist oder zur Video-Sek
 ![Alt text](/img/2.png?raw=true)
 
 ## Schritt 3):
-Optional können Sie den Speicherort für die Videos und die MP3’s ändern z.B. direkt auf den Desktop
+Optional können Sie den Speicherort für die Videos und die MP3’s ändern z.B. direkt auf den Desktop <br/>
 Wenn Sie den Speicherort nicht ändern, befinden sich die Downloads unter YOU_TUBE_DOWNLOADER\video_download und die MP3’s unter YOU_TUBE_DOWNLOADER\mp3
 ![Alt text](/img/5.png?raw=true)
  
@@ -28,8 +28,7 @@ Drücken Sie den Knopf „Prozess starten“ um den Download und die Konvertieru
 ![Alt text](/img/6.png?raw=true)
  
 Es öffnet sich ein Browserfenster, welches nicht geschlossen werden darf! Dieses schließt sich automatisch nachdem alle nötigen Informationen gesammelt wurden
-![Alt text](/img/7.png?raw=true)
- 
+![Alt text](/img/7.png?raw=true) 
 
 ## Schritt 6):
 Sind alle Videos fehlerfrei gedownloadet und konvertiert, sollte die letzte Meldung im Ausgabefeld wie folgt aussehen:
@@ -39,9 +38,8 @@ Sind alle Videos fehlerfrei gedownloadet und konvertiert, sollte die letzte Meld
 Sollte der Download scheitern, kann die Download-Verzögerung erhöht werden z.B. auf 20 Sekunden
 ![Alt text](/img/3.png?raw=true)
 
-Zudem sollte sichergestellt sein, dass gültige Pfade für den Video-Download und für den MP3-Ordner angegeben sind.
-Z.B.
-C:\Users\“Benutzername“\Desktop\video_download 
-C:\Users\“Benutzername“\Desktop\mp3
+Zudem sollte sichergestellt sein, dass gültige Pfade für den Video-Download und für den MP3-Ordner angegeben sind. <br/>
+Z.B. <br/>
+C:\Users\“Benutzername“\Desktop\video_download <br/>
+C:\Users\“Benutzername“\Desktop\mp3 <br/>
 Die Nutzung von mehreren CPU-Threads kann sich negativ auf die Leistung des Computers während des Programmablaufs auswirken
-
