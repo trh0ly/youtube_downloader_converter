@@ -41,5 +41,5 @@ Sollte der Download scheitern, kann die Download-Verzögerung erhöht werden z.B
 Zudem sollte sichergestellt sein, dass gültige Pfade für den Video-Download und für den MP3-Ordner angegeben sind. <br/>
 Z.B. <br/>
 C:\Users\“Benutzername“\Desktop\video_download <br/>
-C:\Users\“Benutzername“\Desktop\mp3 <br/>
+C:\Users\“Benutzername“\Desktop\mp3 <br/> <br/>
 Die Nutzung von mehreren CPU-Threads kann sich negativ auf die Leistung des Computers während des Programmablaufs auswirken
