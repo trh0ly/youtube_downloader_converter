@@ -3,24 +3,22 @@
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
+from multiprocessing import cpu_count
 from bs4 import BeautifulSoup as bs
+from os import getcwd, path, mkdir
 from selenium import webdriver
+from threading import Thread
+from re import findall, sub
+from pytube import YouTube
+from queue import Queue
 from tkinter import ttk
-import multiprocessing
+from time import sleep
 from tkinter import *
-import numpy as np
-import threading
-import pytube
-import queue
-import time
-import os
-import re
+from sys import exit
 
 
 # -------------------------------------------
 # define functions
-
-
 # -------------------------------
 # GUI
 # -------------
@@ -39,7 +37,7 @@ def set_up_cpu_drop_down_menu():
 # -------------
 # sleep timer input
 def set_up_leep_time_input_box():
-    sleep_time_label = Label(root, text="Download-Verzögerung", font=font_normal(())) # create label for sleep_time_input_box
+    sleep_time_label = Label(root, text="Verzögerung beim Download", font=font_normal(())) # create label for sleep_time_input_box
     spacer(widget=sleep_time_label, x=0, y=10) # space
     sleep_time_deafult_value = IntVar(root, 10) # set default installation_check_box_value for sleep_time_input_box
     sleep_time_input_box = Entry(root, width=5, font=font_normal(), textvariable=sleep_time_deafult_value)  # set up sleep_time_input_box
@@ -53,8 +51,7 @@ def set_up_url_input():
     url_input_label = Label(root, text="URL der Playlist/ des Videos:", font=font_bold())
     spacer(widget=url_input_label, x=0, y=20) # space
     url_input_box_value = StringVar(root, 'URL einfügen') # set default url_input_box_value for url_input_box
-    # set up url_input_box
-    url_input_box = Entry(root, width=input_box_width, font=font_normal(), textvariable=url_input_box_value)
+    url_input_box = Entry(root, width=input_box_width, font=font_normal(), textvariable=url_input_box_value) # set up url_input_box
     url_input_box.bind("<Button-1>", clear_on_click) # clear on click
     return url_input_box, url_input_label
 
@@ -99,7 +96,7 @@ def set_up_settings_save_buttom():
 # -------------
 # set up start_bottom
 def set_up_start_bottom():
-    start_bottom = Button(root, text="Prozess starten", font=font_bold(), command=start_thread)  # set up set_up_start_bottom
+    start_bottom = Button(root, text="Prozess starten", font=font_bold(), command=start_main_process_thread)  # set up set_up_start_bottom
     return start_bottom
 
 
@@ -116,7 +113,7 @@ def set_up_scrollbar():
 # ----------------------
 # function that determine usable cpu cores for multiprocessing
 def get_core_count_list():
-    core_count = multiprocessing.cpu_count() # get cpu core count
+    core_count = cpu_count() # get cpu core count
     options = [1] # set default value
     # pass if core count is below 3
     if core_count <= 3: pass
@@ -155,8 +152,10 @@ def separator(x=0, y=125, width=1):
 # ON CLICK / GIU INTERACTIVE
 # ------------------------
 # function that that starts new thread on start bottom click
-def start_thread():
-    threading.Thread(target=start_buttom_on_click).start()
+def start_main_process_thread():
+    main_process_thread = Thread(target=start_buttom_on_click)
+    main_process_thread.name = 'main_process'
+    main_process_thread.start()
 
 
 # ------------------------
@@ -174,7 +173,6 @@ def update_scrollbar_text(text_update, blank_size=72):
     scrollbar_text.config(yscrollcommand=scrollbar.set, state='normal')
     scrollbar_text.insert(END, blank)
     scrollbar_text.insert(END, text_update)
-    scrollbar_text.insert(END, blank)
     scrollbar_text.config(yscrollcommand=scrollbar.set, state='disabled')
     scrollbar_text.see("end")
 
@@ -182,9 +180,9 @@ def update_scrollbar_text(text_update, blank_size=72):
 # -------------
 # define function that determins actual settings
 def get_runtime_settings():
-    current_url = url_input_box.get()
-    current_download_path = download_input_box.get()
-    current_mp3_path = mp3_input_box.get()
+    current_url = str(url_input_box.get())
+    current_download_path = str(download_input_box.get())
+    current_mp3_path = str(mp3_input_box.get())
     current_sleep_time = int(sleep_time_input_box.get())
     return current_url, current_download_path, current_mp3_path, current_sleep_time
 
@@ -201,9 +199,7 @@ def start_buttom_on_click():
 # -------------
 # function that saves settings to config file
 def save_buttom_on_click(file='config.txt'):
-    # get values from input and check boxes
-    new_download_path = download_input_box.get()
-    new_mp3_path = mp3_input_box.get()
+    _, new_download_path, new_mp3_path, _ = get_runtime_settings() # get values from input and check boxes
     # open acutal config file and update configs
     acutal_config_values = read_file(file)
     with open(file, 'w') as f:
@@ -219,7 +215,7 @@ def save_buttom_on_click(file='config.txt'):
 # print information about errors
 def end_message(failed_downloads, failed_convert):
     if len(failed_downloads) < 1: update_scrollbar_text(text_update='[INFO] Der Prozess wurde ohne Downloadfehler abgeschlossen.')
-    else: update_scrollbar_text(text_update='[INFO] Der Prozess wurde mit Downloadfehler(n) abgeschlossen.\nFolgende Titel konnten nicht gedownloaded werden:\n'.format(failed_downloads))
+    else: update_scrollbar_text(text_update='[INFO] Der Prozess wurde mit Downloadfehler(n) abgeschlossen.\nFolgende Titel konnten nicht gedownloaded werden:\n{}'.format(failed_downloads))
     if len(failed_convert) < 1: update_scrollbar_text(text_update='[INFO] Der Prozess wurde ohne Konvertierungsfehler abgeschlossen.')
     else: update_scrollbar_text(text_update='[INFO] Der Prozess wurde mit Konvertierungsfehler(n) abgeschlossen.\nFolgende Titel konnten nicht konvertiert werden:\n{}'.format(failed_convert))
 
@@ -227,9 +223,13 @@ def end_message(failed_downloads, failed_convert):
 # -------------------------------
 # WEBSCRAPE
 # -------------
-# define function
+# define function that manages search_target and search_tag for webscrape
+########################################################################################################################
+# FIX web scrape presicion
+########################################################################################################################
 def get_video_urls(url, time_sleep):
     url_type = check_url_type(url) # check url type
+    # define search_target and search_tag and get links
     if url_type == 'watch_playlist':
         search_target = 'ytd-playlist-panel-video-renderer'
         search_tag = 'watch.*list'
@@ -243,8 +243,7 @@ def get_video_urls(url, time_sleep):
         search_tag = 'href=[\'"]?([^\'" >]+)'
         links = start_driver(url, url_type, time_sleep, search_target, search_tag)
     elif url_type == 'single_video': links = [[url]]
-    else:
-        update_scrollbar_text(text_update='[FEHLER] Es konnten keine gültigen Links erzeugt werden.\nIst der folgende Link korrekt?\n"{}"'.format(url))
+    else: update_scrollbar_text(text_update='[FEHLER] Es konnten keine gültigen Links erzeugt werden.\nIst der folgende Link korrekt?\n"{}"'.format(url))
     return links
 
 
@@ -272,7 +271,7 @@ def start_driver(url, url_type, time_sleep, search_target, search_tag):
     driver.get(url)
     for second in range(time_sleep, 0, -1):
         update_scrollbar_text(text_update='[INFO] Der Prozess startet in {} Sekunden...'.format(second))
-        time.sleep(1) # wait some seconds
+        sleep(1) # wait some seconds
     soup = bs(driver.page_source, 'html.parser') # get page_source from url
     target = soup.find_all(search_target)
     # check if there is page_source
@@ -281,12 +280,11 @@ def start_driver(url, url_type, time_sleep, search_target, search_tag):
         update_scrollbar_text(text_update='[INFO] Der Browser wurde ordnungsgemäß geschlossen.')
     except:
         update_scrollbar_text(text_update='[FEHLER] Der Browser konnte nicht ordnungsgemäß geschlossen werden.\nDas Broswerfenster kann dennoch jetzt geschlossen werden.')
-        pass
     if len(target) > 0:
-        urls = re.findall(search_tag, str(target))
+        urls = findall(search_tag, str(target))
         links = generate_links(urls=urls, url_type=url_type)
     # if there is no information return empy list
-    else: links = []
+    else: update_scrollbar_text(text_update='[FEHLER] Es konnten keine Informationen aus dem Browser gewonnen werden.')
     return links
 
 
@@ -295,23 +293,21 @@ def start_driver(url, url_type, time_sleep, search_target, search_tag):
 # -------------
 # define function that determines local_path
 def get_local_path():
-    local_path = os.getcwd() # get acutal path
+    local_path = getcwd() # get acutal path
     local_path = local_path + '\\'
     return local_path
 
 
 # -------------
 # define function that makes directory
-def make_dir(path):
+def make_dir(_path):
     # Create target directory if don't exist
-    if not os.path.exists(path):
+    if not path.exists(_path):
         try:
-            os.mkdir(path)
-            update_scrollbar_text(text_update='[INFO] Der Pfad "{}" wurde erstellt.'.format(path))
-        except:
-            update_scrollbar_text(text_update='[FEHLER] Der Pfad "{}" konnte nicht erstellt werden.'.format(path))
-    else:
-        pass
+            mkdir(_path)
+            update_scrollbar_text(text_update='[INFO] Der Pfad "{}" wurde erstellt.'.format(_path))
+        except: update_scrollbar_text(text_update='[FEHLER] Der Pfad "{}" konnte nicht erstellt werden.'.format(_path))
+    else: pass
 
 
 # -------------
@@ -361,28 +357,30 @@ def generate_convert_list(video_titels):
 # LINK CHECK AND TRANSFORMATION
 # -------------
 # define function that determines type of url
+########################################################################################################################
+# FIX precsision of url_type detection
+########################################################################################################################
 def check_url_type(url):
     if 'https://www.youtube.com/playlist?list=' in url and 'playnext=' in url: url_type = 'watch_playlist'  # watch list which is playing
     elif 'https://www.youtube.com/playlist?list=' in url: url_type = 'overview_playlist'  # watch list in overview mode
     elif 'https://www.youtube.com/' in url and '/videos' in url: url_type = 'channel_videos'  # you tube channel video
     elif 'https://www.youtube.com/watch?v=' in url: url_type = 'single_video'  # single video
-    else:
-        update_scrollbar_text(text_update='[FEHLER] Der URL-Typ wurde nicht erkannt.\nIst der folgende Link korrekt?\n{}'.format(url))
-        url_type = None
+    else: update_scrollbar_text(text_update='[FEHLER] Der URL-Typ wurde nicht erkannt.\nIst der folgende Link korrekt?\n"{}"'.format(url))
     return url_type
 
 
 # -------------
 # define function that generate downloadable links
+########################################################################################################################
+# FIX silencing when web scrap is more accurate
+########################################################################################################################
 def generate_links(urls, url_type):
     main_url = 'https://www.youtube.com/watch?v='
     if url_type == 'watch_playlist': links = [main_url + str(video_id[8:-9]) for video_id in urls[::2]] # watch list which is playing
     elif url_type == 'overview_playlist': links = [main_url + str(video_id[8:-9]) for video_id in urls[::2]]  # watch list in overview mode
     elif url_type == 'channel_videos': links = [main_url + str(video_id[9:]) for video_id in urls[::2]]  # you tube channel video
     elif url_type == 'single_video': links = main_url + str(urls[8:]) # single video
-    else:
-        update_scrollbar_text(text_update='[FEHLER] Es konnte kein Link erstellt werden.')
-        links = []
+    else: update_scrollbar_text(text_update='[FEHLER] Es konnte kein Link erstellt werden.')
     return links
 
 
@@ -391,19 +389,19 @@ def generate_links(urls, url_type):
 # -------------
 # function that cleans video title to legal characters
 def clean_video_title(title):
-    clean_title = re.sub('\W|^(?=\d)','_', title)
+    clean_title = sub('\W|^(?=\d)','_', title)
     return clean_title
 
 
 # -------------
 # case try of download
 def try_download(link, video_titels, download_path):
-    yt = pytube.YouTube(link)
+    yt = YouTube(link)
     stream = yt.streams.first()
     title = yt.title
     cleaned_title = clean_video_title(title=title)
     video = stream.download(download_path, filename=cleaned_title)
-    update_scrollbar_text(text_update='[INFO] Der Download von {} ist abgeschlossen.\n{}'.format(cleaned_title, link))
+    update_scrollbar_text(text_update='[INFO] Der Download von {} ist abgeschlossen.\nLink: {}'.format(cleaned_title, link))
     video_titels.append(cleaned_title)
     return video_titels
 
@@ -413,7 +411,6 @@ def except_download(link, failed_downloads):
     update_scrollbar_text(text_update='[FEHLER] Der Download von {} ist fehlgeschlagen.'.format(link))
     failed_downloads.append(link)
     return failed_downloads
-    pass
 
 
 # -------------
@@ -429,9 +426,9 @@ def dowload_videos(links, download_path):
             except: failed_downloads = except_download(link=link, failed_downloads=failed_downloads)
     else:
         link = links[0][0]
-        # try to download videos
+        # try to download video
         try: video_titels = try_download(link=link, video_titels=video_titels, download_path=download_path)
-        # if failure print statement and pass
+        # if failure print statement
         except: failed_downloads = except_download(link=link, failed_downloads=failed_downloads)
     return failed_downloads, video_titels
 
@@ -443,14 +440,13 @@ def convert_videos(videos, download_path, mp3_path, que):
     for file in videos:
         # try to convert
         try:
-            video_file = VideoFileClip(os.path.join(download_path + '\\' + str(file)))
-            video_file.audio.write_audiofile(os.path.join(mp3_path + '\\' + str(file[:-4]) + '.mp3'))
+            video_file = VideoFileClip(path.join(download_path + '\\' + str(file)))
+            video_file.audio.write_audiofile(path.join(mp3_path + '\\' + str(file[:-4]) + '.mp3'))
             update_scrollbar_text(text_update='[INFO] Die Konvertierung von {} war erfolgreich.'.format(file))
         # if failure print statement and pass
         except:
             update_scrollbar_text(text_update='[FEHLER]  Die Konvertierung von {} war nicht erfolgreich.'.format(file))
             failed_convert.append(str(file))
-            pass
     que.put(failed_convert)
 
 
@@ -463,52 +459,52 @@ def main_process(sleep_time, current_url, current_download_path, current_mp3_pat
     failed_downloads, video_titels = dowload_videos(links=video_urls, download_path=current_download_path) # download videos
     # get convert state and convert/ not convert videos to mp3
     convert_state = convert_check_box_value.get()
+    # convert videos
     if convert_state is True:
         update_scrollbar_text(text_update='[INFO] Beginne mit dem konvertieren der Videos...')
         video_list = generate_convert_list(video_titels=video_titels) # get titels to convert (downloaded in actual session)
         cpu_cores_to_use = cpu_drop_down_value.get() # get number of cpu cores to use
         splitted_video_list = split_list(list_to_split=video_list, cpu_threads=cpu_cores_to_use) # split video_list into chunks
         failed_convert = set_up_processes(splitted_list=splitted_video_list, current_download_path=current_download_path, current_mp3_path=current_mp3_path) # convert videos
-    else:
-        failed_convert = []
+    else: failed_convert = []
     end_message(failed_downloads, failed_convert)  # print end message
 
 
 # -------------------------------
 # MULTIPROCESSING
-# ---------------------------------
-# define function that splits list into chunks
-def split_list_(list_to_split, chunks):
-    return np.array_split(list_to_split, chunks)
-
-
-# ---------------------------------
+# -------------
 # define function that manages list splitting depending on url and cpu count
 def split_list(list_to_split, cpu_threads):
     len_urls = len(list_to_split) # determine len of jobs
     num_cpu_threads = cpu_threads # get cpu cores to use
     chunks = min(num_cpu_threads, len_urls) # set count of chunks to min of cores to use or jobs
-    splitted_list = split_list_(list_to_split=list_to_split, chunks=chunks)
+    splitted_list = [list_to_split[start::chunks] for start in range(chunks)]
     return splitted_list
 
 
-# ---------------------------------
+# -------------
 # define function that handels multiprocessing video converter function
+########################################################################################################################
+# FIX possible AssertionError: attempt to release recursive lock not owned by thread
+########################################################################################################################
 def set_up_processes(splitted_list, current_download_path, current_mp3_path):
-    que = queue.Queue() # set up queue
+    que = Queue() # set up queue
     full_failed_convert, processes = [], []
+    counter = 0
     # start a thread for every job in splitted_list
     for item in splitted_list:
-        p = threading.Thread(target=convert_videos, args=(item, current_download_path, current_mp3_path, que, ))
-        p.start()
-        processes.append(p)
-        time.sleep(0.05)
+        thread_ = Thread(target=convert_videos, args=(item, current_download_path, current_mp3_path, que, )) # define thread
+        thread_.name = 'convert_thread_' + str(counter) # name thread
+        thread_.start() # start thread
+        processes.append(thread_)
+        sleep(0.05)
+        counter += 1
     # join processes for clean exit
-    for p in processes:
-        p.join()
-        failed_convert = que.get()
+    for thread_ in processes:
+        thread_.join()
+        failed_convert = que.get() # get function return
         full_failed_convert += failed_convert
-        time.sleep(0.05)
+        sleep(0.05)
     return full_failed_convert
 
 
@@ -518,7 +514,7 @@ if __name__ == '__main__':
     # ---------------------------
     # main definition of gui
     root = Tk() # main
-    root.title('Pylo - You-Tube-Downloader und Konverter v_b0.9.8') # title
+    root.title('Pylo - You-Tube-Downloader und Konverter v_b0.9.9') # title
     icon_path = get_local_path()
     root.iconbitmap(icon_path + 'icon.ico') # icon
     root.geometry("650x765") # window size
