@@ -2,7 +2,7 @@
 
 ## Download
 1) Über die Github Repo <br/>
-2) Alternativ: https://www.dropbox.com/sh/37r4wqgvtkqq697/AADF_I54LFKC7H94SBxH4XLza?dl=0
+2) Alternativ: https://www.dropbox.com/sh/evwijvcr37k8k28/AABAIG6seFqfVoXshNYfi7Bya?dl=0
 
 ## Voraussetzungen:
 1)	Ein aktueller Browser (Firefox oder Chrome) muss installiert sein <br/>
